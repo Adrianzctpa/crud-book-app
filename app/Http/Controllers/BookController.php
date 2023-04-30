@@ -9,7 +9,19 @@ use Illuminate\Http\Request;
 class BookController extends Controller
 {
     public function index() {   
-        $keyword = request()->get('search');
+        $token = request()->bearerToken();
+
+        try {
+            $user = auth()->userOrFail();
+        } catch (\Tymon\JWTAuth\Exceptions\UserNotDefinedException $e) {
+            return [
+                'success' => false,
+                'message' => 'User not found.'
+            ];
+        }
+        
+        $keyword = request()->query('keyword');
+
         if (!empty($keyword)) {
             $book = Book::where('name', 'LIKE', "%$keyword%")->orWhere('price', 'LIKE', "%$keyword%")->latest()->paginate(5);
         } else {
@@ -23,15 +35,27 @@ class BookController extends Controller
     }
 
     public function store(Request $req) {
+        $token = $req->bearerToken();
+
+        try {
+            $user = auth()->userOrFail();
+        } catch (\Tymon\JWTAuth\Exceptions\UserNotDefinedException $e) {
+            return [
+                'success' => false,
+                'message' => 'User not found.'
+            ];
+        }
+
         $req->validate([
             'name' => 'required',
         ]);
 
-        $book = new Book();
+        $book = new Book;
         $book->name = $req->name;
         $book->isbn = $req->isbn;
         $book->price = $req->price;
         $book->save();
+
         return [
             'success' => true,
             'message' => 'Book created successfully.',
@@ -40,7 +64,26 @@ class BookController extends Controller
     }
 
     public function update(Request $req, $id) {
-        $book = Book::findOrFail($id);
+
+        $token = request()->bearerToken();
+
+        try {
+            $user = auth()->userOrFail();
+        } catch (\Tymon\JWTAuth\Exceptions\UserNotDefinedException $e) {
+            return [
+                'success' => false,
+                'message' => 'User not found.'
+            ];
+        }
+
+        try {
+            $book = Book::findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return [
+                'success' => false,
+                'message' => 'Book not found.'
+            ];
+        }
 
         if ($req->name != null) {
             $book->name = $req->name;
@@ -63,11 +106,34 @@ class BookController extends Controller
     }
 
     public function destroy($id) {
-        $book = Book::findOrFail($id);
+        $token = request()->bearerToken();
+
+        try {
+            $user = auth()->userOrFail();
+        } catch (\Tymon\JWTAuth\Exceptions\UserNotDefinedException $e) {
+            return [
+                'success' => false,
+                'message' => 'User not found.'
+            ];
+        }
+
+        try {
+            $book = Book::findOrFail($id);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return [
+                'success' => false,
+                'message' => 'Book not found.'
+            ];
+        }
+
         $book->delete();
         return [
             'success' => true,
             'message' => 'Book deleted successfully.',
         ];
+    }
+
+    public function frontIndex() {
+        return view('books.index');
     }
 }

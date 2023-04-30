@@ -1,21 +1,92 @@
 import './bootstrap';
 import axios from 'axios';
 
+const register = document.getElementById('register')
+const login = document.getElementById('login')
+const logout = document.getElementById('logout')
+
+if (localStorage.getItem('token')) {
+    register.style.display = 'none'
+    login.style.display = 'none'
+    logout.style.display = 'block'
+} else {
+    register.style.display = 'block'
+    login.style.display = 'block'
+    logout.style.display = 'none'
+}
+
+register.addEventListener('click', async function () {
+    let name = document.getElementById('username').value
+    let email = document.getElementById('email').value
+    let password = document.getElementById('password').value
+
+    if (name === '' || email === '' || password === '') {
+        alert('Please fill all fields')
+        return
+    }
+
+    await axios.post(`api/auth/register`, {
+        name: name,
+        email: email,
+        password: password
+    })
+
+    login.style.display = 'none'
+    register.style.display = 'none'
+    logout.style.display = 'block'
+})
+
+login.addEventListener('click', async function () {
+    let email = document.getElementById('email').value
+    let password = document.getElementById('password').value
+
+    if (email === '' || password === '') {
+        alert('Please provide both email and password fields')
+        return
+    }
+
+    let resp = await axios.post(`api/auth/login`, {
+        email: email,
+        password: password
+    })
+
+    let token = resp.data.access_token
+    localStorage.setItem('token', token)
+
+    login.style.display = 'none'
+    register.style.display = 'none'
+    logout.style.display = 'block'
+})
+
+logout.addEventListener('click', async function () {
+    await fetch('api/auth/logout', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+    })
+
+    localStorage.removeItem('token')
+
+    login.style.display = 'block'
+    register.style.display = 'block'
+    logout.style.display = 'none'
+})
+
 const search = document.getElementById('search')
 const codeSearch = document.getElementById('code-search')
 
 search.addEventListener('click', async function () {
     const input = document.getElementById('searchInput').value
+    console.log(input)
 
-    let response = await axios.get(`books`, {
-        data: {
-            keyword: input
+    let response = await axios.get(`api/books?keyword=${input}`, {
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
         }
     })
     
-    if (response.data.success) {
-        codeSearch.textContent = JSON.stringify(response.data, null, "\t")
-    }
+    codeSearch.textContent = JSON.stringify(response.data, null, "\t") 
 })
 
 const create = document.getElementById('create')
@@ -26,20 +97,25 @@ create.addEventListener('click', async function () {
     let isbn = document.getElementById('isbn').value
     let price = document.getElementById('price').value
 
-    if (name == '' || isbn == '' || price == '') {
+    let axiosInstance = axios.create({
+        baseURL: 'api/books',
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+        }
+    })
+
+    if (name === '' || isbn === '' || price === '') {
         alert('Please fill all fields')
         return
     }
 
-    let response = await axios.post(`books`, {
+    let response = await axiosInstance.post('', {
         name: name,
         isbn: isbn,
         price: price
     })
-
-    if (response.data.success) {
-        codeCreate.textContent = JSON.stringify(response.data, null, "\t")
-    }
+    
+    codeCreate.textContent = JSON.stringify(response.data, null, "\t")
 })
 
 const update = document.getElementById('update')
@@ -51,19 +127,28 @@ update.addEventListener('click', async function () {
     let isbn = document.getElementById('update-isbn').value
     let price = document.getElementById('update-price').value
 
-    if (id == '') {
+    if (id === '') {
         alert('Please insert an ID')
         return
     }
 
-    let response = await axios.patch(`books/${id}`, {
-        name: name,
-        isbn: isbn,
-        price: price
+    let axiosInstance = axios.create({
+        baseURL: 'api/books',
+        headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+        }
     })
 
-    if (response.data.success) {
+    try {
+        let response = await axiosInstance.patch(`/${id}`, {
+            name: name,
+            isbn: isbn,
+            price: price
+        })
+
         codeUpdate.textContent = JSON.stringify(response.data, null, "\t")
+    } catch (error) {
+        codeUpdate.textContent = JSON.stringify(error.response.data, null, "\t")
     }
 })
 
@@ -73,14 +158,19 @@ const codeDelete = document.getElementById('code-delete')
 deleteBtn.addEventListener('click', async function () {
     let id = document.getElementById('delete-id').value
 
-    if (id == '') {
+    if (id === '') {
         alert('Please insert an ID')
         return
     }
 
-    let response = await axios.delete(`books/${id}`)
-
-    if (response.data.success) {
+    try {
+        let response = await axios.delete(`api/books/${id}`, {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            }
+        })
         codeDelete.textContent = JSON.stringify(response.data, null, "\t")
+    } catch (error) {
+        codeDelete.textContent = JSON.stringify(error.response.data, null, "\t")
     }
 })
