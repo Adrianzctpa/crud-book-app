@@ -14,7 +14,7 @@ Composer e NPM, respectivamente:
 
 ### Setup do projeto
 Crie uma cópia da env, usando o env.example:
-> cp .env .example.env
+> cp .env.example .env
 
 Gere a chave de encriptação
 > php artisan key:generate
