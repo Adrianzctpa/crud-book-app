@@ -14,8 +14,4 @@ use App\Http\Controllers\BookController;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/front', [BookController::class, 'frontIndex'])->name('front');
+Route::get('/', [BookController::class, 'frontIndex'])->name('front');

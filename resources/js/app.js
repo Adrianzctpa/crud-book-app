@@ -31,9 +31,11 @@ register.addEventListener('click', async function () {
         password: password
     })
 
-    login.style.display = 'none'
-    register.style.display = 'none'
-    logout.style.display = 'block'
+    login.style.display = 'block'
+    register.style.display = 'block'
+    logout.style.display = 'none'
+
+    alert('User registered successfully')
 })
 
 login.addEventListener('click', async function () {
@@ -45,17 +47,24 @@ login.addEventListener('click', async function () {
         return
     }
 
-    let resp = await axios.post(`api/auth/login`, {
-        email: email,
-        password: password
-    })
+    try {
+        let resp = await axios.post(`api/auth/login`, {
+            email: email,
+            password: password
+        })
 
-    let token = resp.data.access_token
-    localStorage.setItem('token', token)
+        let token = resp.data.access_token
+        localStorage.setItem('token', token)
 
-    login.style.display = 'none'
-    register.style.display = 'none'
-    logout.style.display = 'block'
+        login.style.display = 'none'
+        register.style.display = 'none'
+        logout.style.display = 'block'
+
+        alert('User logged in successfully')
+    } catch (error) {
+        alert('Invalid credentials')
+        return
+    }
 })
 
 logout.addEventListener('click', async function () {
