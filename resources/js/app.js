@@ -136,8 +136,8 @@ update.addEventListener('click', async function () {
     let isbn = document.getElementById('update-isbn').value
     let price = document.getElementById('update-price').value
 
-    if (id === '') {
-        alert('Please insert an ID')
+    if (id === '' || name === '' || isbn === '' || price === '') {
+        alert('Please fill all fields')
         return
     }
 
@@ -149,7 +149,7 @@ update.addEventListener('click', async function () {
     })
 
     try {
-        let response = await axiosInstance.patch(`/${id}`, {
+        let response = await axiosInstance.put(`/${id}`, {
             name: name,
             isbn: isbn,
             price: price

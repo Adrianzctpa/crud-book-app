@@ -85,17 +85,15 @@ class BookController extends Controller
             ];
         }
 
-        if ($req->name != null) {
-            $book->name = $req->name;
-        }
+        request()->validate([
+            'name' => 'required',
+            'isbn' => 'required',
+            'price' => 'required',
+        ]);
 
-        if ($req->isbn != null) {
-            $book->isbn = $req->isbn;
-        }
-
-        if ($req->price != null) {
-            $book->price = $req->price;
-        }
+        $book->name = $req->name;
+        $book->isbn = $req->isbn;
+        $book->price = $req->price;
 
         $book->save();
         return [
